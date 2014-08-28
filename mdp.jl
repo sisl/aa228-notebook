@@ -1,18 +1,25 @@
+# Problem based on https://www.cs.ubc.ca/~poole/demos/mdp/vi.html
+
+using TikzPictures
+
 type GridWorld
   S
   A
   T
   R
   gamma
+  V
+  Q
 end
 
+s2xy(s) = ind2sub((10, 10), s)
 
 function xy2s(x, y)
   x = max(x, 1)
   y = max(y, 1)
   x = min(x, 10)
   y = min(y, 10)
-  sub2ind([10 10], x, y)
+  sub2ind((10, 10), x, y)
 end
 
 function GridWorld()
@@ -62,22 +69,22 @@ function GridWorld()
         R[s, 2] = -1
       end
       for a in A
-        if a == 1 % left
+        if a == 1 # left
           T[s, a, xy2s(x, y - 1)] += 0.7
           T[s, a, xy2s(x, y + 1)] += 0.1
           T[s, a, xy2s(x - 1, y)] += 0.1
           T[s, a, xy2s(x + 1, y)] += 0.1
-        elseif a == 2 % right
+        elseif a == 2 # right
           T[s, a, xy2s(x, y + 1)] += 0.7
           T[s, a, xy2s(x, y - 1)] += 0.1
           T[s, a, xy2s(x - 1, y)] += 0.1
           T[s, a, xy2s(x + 1, y)] += 0.1
-        elseif a == 3 % up
+        elseif a == 3 # up
           T[s, a, xy2s(x - 1, y)] += 0.7
           T[s, a, xy2s(x + 1, y)] += 0.1
           T[s, a, xy2s(x, y - 1)] += 0.1
           T[s, a, xy2s(x, y + 1)] += 0.1
-        elseif a == 4 % down
+        elseif a == 4 # down
           T[s, a, xy2s(x + 1, y)] += 0.7
           T[s, a, xy2s(x - 1, y)] += 0.1
           T[s, a, xy2s(x, y - 1)] += 0.1
@@ -87,53 +94,76 @@ function GridWorld()
     end
   end
   gamma = 0.9
-  GridWorld(S,A,T,R,gamma)
+  V = zeros(100)
+  Q = zeros(100,4)
+  GridWorld(S,A,T,R,gamma,V,Q)
 end
 
-function colorval(val::Real, brightness::Real)
-  x = 255 - min(255, 255 * (abs(val) ./ 10.0) .^ obj.brightness)
+function colorval(val, brightness::Real = 1.0)
+  x = 255 - min(255, 255 * (abs(val) ./ 10.0) .^ brightness)
   r = 255 * ones(size(val))
   g = 255 * ones(size(val))
-  r[val .>= 0] = x(val .>= 0)
-  b[val .>= 0] = x(val .>= 0)
-  g[val .< 0] = x(val .< 0)
-  b[val .< 0] = x(val .< 0)
+  b = 255 * ones(size(val))
+  r[val .>= 0] = x[val .>= 0]
+  b[val .>= 0] = x[val .>= 0]
+  g[val .< 0] = x[val .< 0]
+  b[val .< 0] = x[val .< 0]
   (r, g, b)
 end
 
+epseq(a, b, eps = 1e-4) = abs(a - b) < eps
+
 function plot(obj::GridWorld)
+  V = obj.V
+  Q = obj.Q
   o = IOBuffer()
   sqsize = 1.0
   twid = 0.05
-  [r g b] = colorval(V);
+  (r, g, b) = colorval(V)
   for s = obj.S
-    [xval, yval] = s2xy(s)
-    println(o, "\\definecolor{currentcolor}{RGB}{$(r(s)),$(g(s)),$(b(s))}")
-    println(o, "\\fill[currentcolor] ($(xval * sqsize),$(xval * sqsize)) rectangle +($sqsize,$sqsize);")
+    (yval, xval) = s2xy(s)
+    yval = 10 - yval
+    println(o, "\\definecolor{currentcolor}{RGB}{$(r[s]),$(g[s]),$(b[s])}")
+    println(o, "\\fill[currentcolor] ($((xval-1) * sqsize),$((yval) * sqsize)) rectangle +($sqsize,$sqsize);")
   end
-  printf(o, "\\begin{scope}[fill=gray]")
-#   for s = obj.S
-#     [xval, yval] = obj.s2xy(s);
-#     if obj.V(s) == obj.Q(s,1)
-#       uptrix = [xval * sqsize + sqsize / 2 - twid, xval * sqsize + sqsize / 2 + twid, xval * sqsize + sqsize / 2];
-#       uptriy = [yval * sqsize + sqsize / 2, yval * sqsize + sqsize / 2, yval * sqsize ];
-#     end
-#     if obj.V(s) == obj.Q(s,2)
-#       uptriy = [ yval * sqsize + sqsize / 2 - twid, yval * sqsize + sqsize / 2 + twid, yval * sqsize + sqsize / 2 ];
-#       uptrix = [ xval * sqsize + sqsize / 2, xval * sqsize + sqsize / 2, (xval + 1) * sqsize ];
-#     end
-#     if obj.V(s) == obj.Q(s,3)
-#       uptrix = [ xval * sqsize + sqsize / 2 - twid, xval * sqsize + sqsize / 2 + twid, xval * sqsize + sqsize / 2 ];
-#       uptriy = [ yval * sqsize + sqsize / 2, yval * sqsize + sqsize / 2, (yval + 1) * sqsize ];
-#     end
-#     if obj.V(s) == obj.Q(s,4)
-#       uptriy = [ yval * sqsize + sqsize / 2 - twid, yval * sqsize + sqsize / 2 + twid, yval * sqsize + sqsize / 2 ];
-#       uptrix = [ xval * sqsize + sqsize / 2, xval * sqsize + sqsize / 2, xval * sqsize ];
-#     end
-#     println(o, "\\fill ($uptrix(1), $uptriy(1)) -- ($uptrix(2), $uptriy(2)) -- ($uptrix(3), $uptriy(3)) -- cycle;")
-#     println(o, '\\node[above right] at ($(xval * sqsize), $((yval + 1) * sqsize)) {\$$(@sprintf("%0.2f", V(s)))\$};")
-#   end
-#   println(o, "\\end{scope}");
-#   println(o, "\\draw[black] grid(10,10);");
-  takebuf_string(o)
+  println(o, "\\begin{scope}[fill=gray]")
+  for s = 1
+    (yval, xval) = s2xy(s)
+    yval = 10 - yval
+    if epseq(V[s], Q[s,1]) # left
+      uptriy = [ yval * sqsize + sqsize / 2 - twid, yval * sqsize + sqsize / 2 + twid, yval * sqsize + sqsize / 2 ]
+      uptrix = [ xval * sqsize + sqsize / 2, xval * sqsize + sqsize / 2, (xval) * sqsize ] - 1
+      println(o, "\\fill ($(uptrix[1]), $(uptriy[1])) -- ($(uptrix[2]), $(uptriy[2])) -- ($(uptrix[3]), $(uptriy[3])) -- cycle;")
+    end
+    if epseq(V[s], Q[s,2]) # right
+      uptriy = 12 - [xval * sqsize + sqsize / 2 - twid, xval * sqsize + sqsize / 2 + twid, xval * sqsize + sqsize / 2] - 1
+      uptrix = 10 - [yval * sqsize + sqsize / 2, yval * sqsize + sqsize / 2, yval * sqsize ]
+      println(o, "\\fill ($(uptrix[1]), $(uptriy[1])) -- ($(uptrix[2]), $(uptriy[2])) -- ($(uptrix[3]), $(uptriy[3])) -- cycle;")
+    end
+   if epseq(V[s], Q[s,3]) # up
+      uptrix = 10 - [ yval * sqsize + sqsize / 2 - twid, yval * sqsize + sqsize / 2 + twid, yval * sqsize + sqsize / 2 ]
+      uptriy = 12 - [ xval * sqsize + sqsize / 2, xval * sqsize + sqsize / 2, xval * sqsize ] - 1
+      println(o, "\\fill ($(uptrix[1]), $(uptriy[1])) -- ($(uptrix[2]), $(uptriy[2])) -- ($(uptrix[3]), $(uptriy[3])) -- cycle;")
+    end
+    if epseq(V[s], Q[s,4]) # down
+      uptrix = [ xval * sqsize + sqsize / 2 - twid, xval * sqsize + sqsize / 2 + twid, xval * sqsize + sqsize / 2 ] - 1
+      uptriy = [ yval * sqsize + sqsize / 2, yval * sqsize + sqsize / 2, (yval) * sqsize ]
+      println(o, "\\fill ($(uptrix[1]), $(uptriy[1])) -- ($(uptrix[2]), $(uptriy[2])) -- ($(uptrix[3]), $(uptriy[3])) -- cycle;")
+    end
+    vs = @sprintf("%0.2f", V[s])
+    println(o, "\\node[above right] at ($((xval-1) * sqsize), $((yval) * sqsize)) {\$$(vs)\$};")
+  end
+  println(o, "\\end{scope}");
+  println(o, "\\draw[black] grid(10,10);");
+  tikzDeleteIntermediate(false)
+  TikzPicture(takebuf_string(o), options="scale=1.5")
 end
+
+function backup(obj::GridWorld)
+  Vold = copy(obj.V)
+  for s in obj.S
+    obj.Q[s,:] = obj.R[s, :] + (obj.gamma * squeeze(obj.T[s, :, :], 1) * Vold)'
+    obj.V[s] = maximum(obj.Q[s,:])
+  end
+end
+
