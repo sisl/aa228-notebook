@@ -111,8 +111,6 @@ function colorval(val, brightness::Real = 1.0)
   (r, g, b)
 end
 
-epseq(a, b, eps = 1e-4) = abs(a - b) < eps
-
 function plot(obj::GridWorld)
   V = obj.V
   Q = obj.Q
@@ -127,42 +125,49 @@ function plot(obj::GridWorld)
     println(o, "\\fill[currentcolor] ($((xval-1) * sqsize),$((yval) * sqsize)) rectangle +($sqsize,$sqsize);")
   end
   println(o, "\\begin{scope}[fill=gray]")
-  for s = 1
+  for s in obj.S
     (yval, xval) = s2xy(s)
-    yval = 10 - yval
-    if epseq(V[s], Q[s,1]) # left
-      uptriy = [ yval * sqsize + sqsize / 2 - twid, yval * sqsize + sqsize / 2 + twid, yval * sqsize + sqsize / 2 ]
-      uptrix = [ xval * sqsize + sqsize / 2, xval * sqsize + sqsize / 2, (xval) * sqsize ] - 1
-      println(o, "\\fill ($(uptrix[1]), $(uptriy[1])) -- ($(uptrix[2]), $(uptriy[2])) -- ($(uptrix[3]), $(uptriy[3])) -- cycle;")
+    yval = 10 - yval + 1
+    c = [xval, yval] * sqsize - sqsize / 2
+    C = [c'; c'; c']'
+    RightArrow = [0 0 sqsize/2; twid -twid 0]
+    if V[s] == Q[s,1] # left
+      A = [-1 0; 0 -1] * RightArrow + C
+      println(o, "\\fill ($(A[1]), $(A[2])) -- ($(A[3]), $(A[4])) -- ($(A[5]), $(A[6])) -- cycle;")
     end
-    if epseq(V[s], Q[s,2]) # right
-      uptriy = 12 - [xval * sqsize + sqsize / 2 - twid, xval * sqsize + sqsize / 2 + twid, xval * sqsize + sqsize / 2] - 1
-      uptrix = 10 - [yval * sqsize + sqsize / 2, yval * sqsize + sqsize / 2, yval * sqsize ]
-      println(o, "\\fill ($(uptrix[1]), $(uptriy[1])) -- ($(uptrix[2]), $(uptriy[2])) -- ($(uptrix[3]), $(uptriy[3])) -- cycle;")
+    if V[s] == Q[s,2] # right
+      A = RightArrow + C
+      println(o, "\\fill ($(A[1]), $(A[2])) -- ($(A[3]), $(A[4])) -- ($(A[5]), $(A[6])) -- cycle;")
     end
-   if epseq(V[s], Q[s,3]) # up
-      uptrix = 10 - [ yval * sqsize + sqsize / 2 - twid, yval * sqsize + sqsize / 2 + twid, yval * sqsize + sqsize / 2 ]
-      uptriy = 12 - [ xval * sqsize + sqsize / 2, xval * sqsize + sqsize / 2, xval * sqsize ] - 1
-      println(o, "\\fill ($(uptrix[1]), $(uptriy[1])) -- ($(uptrix[2]), $(uptriy[2])) -- ($(uptrix[3]), $(uptriy[3])) -- cycle;")
+    if V[s] == Q[s,3] # up
+      A = [0 -1; 1 0] * RightArrow + C
+      println(o, "\\fill ($(A[1]), $(A[2])) -- ($(A[3]), $(A[4])) -- ($(A[5]), $(A[6])) -- cycle;")
     end
-    if epseq(V[s], Q[s,4]) # down
-      uptrix = [ xval * sqsize + sqsize / 2 - twid, xval * sqsize + sqsize / 2 + twid, xval * sqsize + sqsize / 2 ] - 1
-      uptriy = [ yval * sqsize + sqsize / 2, yval * sqsize + sqsize / 2, (yval) * sqsize ]
-      println(o, "\\fill ($(uptrix[1]), $(uptriy[1])) -- ($(uptrix[2]), $(uptriy[2])) -- ($(uptrix[3]), $(uptriy[3])) -- cycle;")
+    if V[s] == Q[s,4] # down
+      A = [0 1; -1 0] * RightArrow + C
+      println(o, "\\fill ($(A[1]), $(A[2])) -- ($(A[3]), $(A[4])) -- ($(A[5]), $(A[6])) -- cycle;")
     end
+
     vs = @sprintf("%0.2f", V[s])
-    println(o, "\\node[above right] at ($((xval-1) * sqsize), $((yval) * sqsize)) {\$$(vs)\$};")
+    println(o, "\\node[above right] at ($((xval-1) * sqsize), $((yval-1) * sqsize)) {\$$(vs)\$};")
   end
   println(o, "\\end{scope}");
   println(o, "\\draw[black] grid(10,10);");
   tikzDeleteIntermediate(false)
-  TikzPicture(takebuf_string(o), options="scale=1.5")
+  TikzPicture(takebuf_string(o), options="scale=1.25")
 end
 
 function backup(obj::GridWorld)
   Vold = copy(obj.V)
   for s in obj.S
     obj.Q[s,:] = obj.R[s, :] + (obj.gamma * squeeze(obj.T[s, :, :], 1) * Vold)'
+    obj.V[s] = maximum(obj.Q[s,:])
+  end
+end
+
+function backupGaussSeidel(obj::GridWorld)
+  for s in obj.S
+    obj.Q[s,:] = obj.R[s, :] + (obj.gamma * squeeze(obj.T[s, :, :], 1) * obj.V)'
     obj.V[s] = maximum(obj.Q[s,:])
   end
 end
