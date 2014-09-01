@@ -133,6 +133,16 @@ function plot(obj::GridWorld, V::Vector)
   TikzPicture(takebuf_string(o), options="scale=1.25")
 end
 
+function plot(obj::GridWorld, f::Function, policy::Function)
+  V = map(f, obj.S)
+  plot(obj, V, policy)
+end
+
+function plot(obj::GridWorld, V::Vector, policy::Function)
+  P = map(policy, obj.S)
+  plot(obj, V, P)
+end
+
 function plot(obj::GridWorld, V::Vector, policy::Vector)
   o = IOBuffer()
   sqsize = 1.0
