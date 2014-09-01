@@ -151,19 +151,19 @@ function plot(obj::GridWorld, V::Vector, policy::Vector)
     c = [xval, yval] * sqsize - sqsize / 2
     C = [c'; c'; c']'
     RightArrow = [0 0 sqsize/2; twid -twid 0]
-    if policy[s] == 1 # left
+    if policy[s] == :left
       A = [-1 0; 0 -1] * RightArrow + C
       println(o, "\\fill ($(A[1]), $(A[2])) -- ($(A[3]), $(A[4])) -- ($(A[5]), $(A[6])) -- cycle;")
     end
-    if policy[s] == 2 # right
+    if policy[s] == :right
       A = RightArrow + C
       println(o, "\\fill ($(A[1]), $(A[2])) -- ($(A[3]), $(A[4])) -- ($(A[5]), $(A[6])) -- cycle;")
     end
-    if policy[s] == 3 # up
+    if policy[s] == :up
       A = [0 -1; 1 0] * RightArrow + C
       println(o, "\\fill ($(A[1]), $(A[2])) -- ($(A[3]), $(A[4])) -- ($(A[5]), $(A[6])) -- cycle;")
     end
-    if policy[s] == 4 # down
+    if policy[s] == :down
       A = [0 1; -1 0] * RightArrow + C
       println(o, "\\fill ($(A[1]), $(A[2])) -- ($(A[3]), $(A[4])) -- ($(A[5]), $(A[6])) -- cycle;")
     end
