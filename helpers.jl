@@ -13,14 +13,12 @@ end
 macro argmax(range, ex)
     @assert(range.head == :in)
     @assert(length(range.args) == 2)
-    A = range.args[2]
-    :((A)[indmax($(Expr(:typed_comprehension, :Float64, ex, range)))])
+    :($(range.args[2])[indmax($(Expr(:typed_comprehension, :Float64, ex, range)))])
 end
 macro argmin(range, ex)
     @assert(range.head == :in)
     @assert(length(range.args) == 2)
-    A = range.args[2]
-    :((A)[indmin($(Expr(:typed_comprehension, :Float64, ex, range)))])
+    :($(range.args[2])[indmin($(Expr(:typed_comprehension, :Float64, ex, range)))])
 end
 macro array(range, ex)
     :($(Expr(:typed_comprehension, :Float64, ex, range)))
