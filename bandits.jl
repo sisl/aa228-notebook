@@ -38,3 +38,40 @@ function banditEstimation(b)
   display(t)
   display(lift(v -> v == "Show" ? latex(string(b.θ)) : latex(""), t))
 end
+
+type BanditStatistics
+    numWins::Vector{Int}
+    numTries::Vector{Int}
+    BanditStatistics(k::Int) = new(zeros(k), zeros(k))
+end
+numArms(b::BanditStatistics) = length(b.numWins)
+function update!(b::BanditStatistics, i::Int, success::Bool)
+    b.numTries[i] += 1
+    if success
+        b.numWins[i] += 1
+    end
+end
+# win probability assuming uniform prior
+winProbabilities(b::BanditStatistics) = (b.numWins + 1)./(b.numTries + 2)
+
+abstract BanditPolicy
+
+function simulate(b::Bandit, policy::BanditPolicy; steps = 10)
+    wins = zeros(steps)
+    s = BanditStatistics(numArms(b))
+    for step = 1:steps
+        i = arm(policy, s)
+        win = pull(b, i)
+        update!(s, i, win)
+        wins[step] = wins[max(1, step-1)] + (win ? 1 : 0)
+    end
+    wins
+end
+
+function simulateAverage(b::Bandit, policy::BanditPolicy; steps = 10, iterations = 10)
+  ret = zeros(steps)
+  for i = 1:iterations
+    ret += simulate(b, policy, steps=steps, steps=steps)
+  end
+  ret ./ iterations
+end
