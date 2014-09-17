@@ -1,12 +1,11 @@
+include("mdp.jl")
+
 # Problem based on https://www.cs.ubc.ca/~poole/demos/mdp/vi.html
 
 using TikzPictures
 
 type GridWorld
-  S
-  A
-  T
-  R
+  mdp::MDP
 end
 
 s2xy(s) = ind2sub((10, 10), s)
@@ -20,7 +19,7 @@ function xy2s(x, y)
 end
 
 function GridWorld()
-  A = 1:4
+  A = [:left, :right, :up, :down]
   S = 1:100
   T = zeros(length(S), length(A), length(S))
   R = zeros(length(S), length(A))
@@ -66,26 +65,26 @@ function GridWorld()
         R[s, 2] = -0.7
       end
       for a in A
-        if a == 1 # left
-          T[s, a, xy2s(x, y - 1)] += 0.7
-          T[s, a, xy2s(x, y + 1)] += 0.1
-          T[s, a, xy2s(x - 1, y)] += 0.1
-          T[s, a, xy2s(x + 1, y)] += 0.1
-        elseif a == 2 # right
-          T[s, a, xy2s(x, y + 1)] += 0.7
-          T[s, a, xy2s(x, y - 1)] += 0.1
-          T[s, a, xy2s(x - 1, y)] += 0.1
-          T[s, a, xy2s(x + 1, y)] += 0.1
-        elseif a == 3 # up
-          T[s, a, xy2s(x - 1, y)] += 0.7
-          T[s, a, xy2s(x + 1, y)] += 0.1
-          T[s, a, xy2s(x, y - 1)] += 0.1
-          T[s, a, xy2s(x, y + 1)] += 0.1
-        elseif a == 4 # down
-          T[s, a, xy2s(x + 1, y)] += 0.7
-          T[s, a, xy2s(x - 1, y)] += 0.1
-          T[s, a, xy2s(x, y - 1)] += 0.1
-          T[s, a, xy2s(x, y + 1)] += 0.1
+        if a == :left
+          T[s, 1, xy2s(x, y - 1)] += 0.7
+          T[s, 1, xy2s(x, y + 1)] += 0.1
+          T[s, 1, xy2s(x - 1, y)] += 0.1
+          T[s, 1, xy2s(x + 1, y)] += 0.1
+        elseif a == :right
+          T[s, 2, xy2s(x, y + 1)] += 0.7
+          T[s, 2, xy2s(x, y - 1)] += 0.1
+          T[s, 2, xy2s(x - 1, y)] += 0.1
+          T[s, 2, xy2s(x + 1, y)] += 0.1
+        elseif a == :up
+          T[s, 3, xy2s(x - 1, y)] += 0.7
+          T[s, 3, xy2s(x + 1, y)] += 0.1
+          T[s, 3, xy2s(x, y - 1)] += 0.1
+          T[s, 3, xy2s(x, y + 1)] += 0.1
+        elseif a == :down
+          T[s, 4, xy2s(x + 1, y)] += 0.7
+          T[s, 4, xy2s(x - 1, y)] += 0.1
+          T[s, 4, xy2s(x, y - 1)] += 0.1
+          T[s, 4, xy2s(x, y + 1)] += 0.1
         end
       end
     end
@@ -94,7 +93,7 @@ function GridWorld()
   R[10,1] = -0.8
   R[91,2] = -0.8
   R[100,2] = -0.8
-  GridWorld(S,A,T,R)
+  GridWorld(MDP(S,A,T,R))
 end
 
 function colorval(val, brightness::Real = 1.0)
@@ -110,21 +109,24 @@ function colorval(val, brightness::Real = 1.0)
   (r, g, b)
 end
 
-function plot(obj::GridWorld, f::Function)
-  V = map(f, obj.S)
-  plot(obj, V)
+function plot(g::GridWorld, f::Function)
+  V = map(f, g.mdp.S)
+  plot(g, V)
 end
 
-function plot(obj::GridWorld, V::Vector)
+function plot(obj::GridWorld, V::Vector; curState=0)
   o = IOBuffer()
   sqsize = 1.0
   twid = 0.05
   (r, g, b) = colorval(V)
-  for s = obj.S
+  for s = obj.mdp.S
     (yval, xval) = s2xy(s)
     yval = 10 - yval
     println(o, "\\definecolor{currentcolor}{RGB}{$(r[s]),$(g[s]),$(b[s])}")
     println(o, "\\fill[currentcolor] ($((xval-1) * sqsize),$((yval) * sqsize)) rectangle +($sqsize,$sqsize);")
+    if s == curState
+      println(o, "\\fill[orange] ($((xval-1) * sqsize),$((yval) * sqsize)) rectangle +($sqsize,$sqsize);")
+    end
     vs = @sprintf("%0.2f", V[s])
     println(o, "\\node[above right] at ($((xval-1) * sqsize), $((yval) * sqsize)) {\$$(vs)\$};")
   end
@@ -133,13 +135,13 @@ function plot(obj::GridWorld, V::Vector)
   TikzPicture(takebuf_string(o), options="scale=1.25")
 end
 
-function plot(obj::GridWorld, f::Function, policy::Function; curState=0)
-  V = map(f, obj.S)
-  plot(obj, V, policy, curState=curState)
+function plot(g::GridWorld, f::Function, policy::Function; curState=0)
+  V = map(f, g.mdp.S)
+  plot(g, V, policy, curState=curState)
 end
 
 function plot(obj::GridWorld, V::Vector, policy::Function; curState=0)
-  P = map(policy, obj.S)
+  P = map(policy, obj.mdp.S)
   plot(obj, V, P, curState=curState)
 end
 
@@ -148,7 +150,7 @@ function plot(obj::GridWorld, V::Vector, policy::Vector; curState=0)
   sqsize = 1.0
   twid = 0.05
   (r, g, b) = colorval(V)
-  for s = obj.S
+  for s in obj.mdp.S
     (yval, xval) = s2xy(s)
     yval = 10 - yval
     println(o, "\\definecolor{currentcolor}{RGB}{$(r[s]),$(g[s]),$(b[s])}")
@@ -158,7 +160,7 @@ function plot(obj::GridWorld, V::Vector, policy::Vector; curState=0)
     end
   end
   println(o, "\\begin{scope}[fill=gray]")
-  for s in obj.S
+  for s in obj.mdp.S
     (yval, xval) = s2xy(s)
     yval = 10 - yval + 1
     c = [xval, yval] * sqsize - sqsize / 2
@@ -188,3 +190,4 @@ function plot(obj::GridWorld, V::Vector, policy::Vector; curState=0)
   println(o, "\\draw[black] grid(10,10);");
   TikzPicture(takebuf_string(o), options="scale=1.25")
 end
+
