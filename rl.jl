@@ -1,50 +1,49 @@
 using Distributions
 include("gridworld.jl")
+include("helpers.jl")
 
-randState(mdp::MDP) = rand(DiscreteUniform(1,numStates(mdp)))
+randState(mdp::MDP) = states(mdp)[rand(DiscreteUniform(1,numStates(mdp)))]
+
+function valueIteration(mdp::MDP, iterations::Integer)
+  V = zeros(numStates(mdp))
+  Q = zeros(numStates(mdp), numActions(mdp))
+  valueIteration!(V, Q, mdp, iterations)
+  (V, Q)
+end
 
 function valueIteration!(V::Vector, Q::Matrix, mdp::MDP, iterations::Integer)
-  numStates = length(V)
+  (S, A, T, R, discount) = locals(mdp)
   Vold = copy(V)
   for i = 1:iterations
-    for s in 1:numStates
-      Q[s,:] = mdp.R[s, :] + (mdp.discount * squeeze(mdp.T[s, :, :], 1) * Vold)'
-      V[s] = maximum(Q[s,:])
+    for s0i in 1:numStates(mdp)
+      for ai = 1:numActions(mdp)
+        s0 = S[s0i]
+        a = A[ai]
+        Q[s0i,ai] = R(s0, a) + discount * @sum (s1 in nextStates(mdp, s0, a)) T(s0, a, s1)*Vold[stateIndex(mdp, s1)]
+      end
+      V[s0i] = maximum(Q[s0i,:])
     end
     copy!(Vold, V)
   end
 end
 
-function estimateParameters!(mdp::MDP, N, ρ)
-  numStates = size(N, 1)
-  numActions = size(N, 2)
-  mdp.T = copy(N)
-  mdp.R = copy(ρ)
-  for s0 = 1:numStates
-    for a = 1:numActions
-      denom = sum(N[s0, a, :])
-      if denom > 0
-        mdp.T[s0, a, :] /= denom
-        mdp.R[s0, a] /= denom
-      end
-    end
-  end
+function updateParameters!(mdp::MappedDiscreteMDP, N, Nsa, ρ, s, a)
+  si = mdp.stateIndex[s]
+  ai = mdp.actionIndex[a]
+  denom = Nsa[si, ai]
+  mdp.T[si, ai, :] = N[si, ai, :] ./ denom
+  mdp.R[si, ai] = ρ[si, ai] / denom
 end
 
-function isTerminal(mdp::MDP, s, a)
-  s0i = mdp.stateIndex[s]
-  ai = mdp.actionIndex[a]
-  sum(mdp.T[s0i, ai, :]) == 0
+function isTerminal(mdp::MDP, s0, a)
+  S1 = nextStates(mdp, s0, a)
+  length(S1) == 0 || 0 == @sum (s1 in S1) transition(mdp, s0, a, s1)
 end
 
-function nextStateReward(mdp::MDP, s, a)
-  s0i = mdp.stateIndex[s]
-  ai = mdp.actionIndex[a]
-  p = squeeze(mdp.T[s0i, ai, :], (1,2))
-  if abs(sum(p) - 1) > 0.001
-    error("Probabilities sum to $(sum(p))")
-  end
+nextReward(mdp::MDP, s0, a) = reward(mdp, s0, a)
+
+function nextState(mdp::MDP, s0, a)
+  p = @array (s1 in states(mdp)) transition(mdp, s0, a, s1)
   s1i = rand(Categorical(p))
-  r = mdp.R[s0i, ai]
-  (mdp.S[s1i], r)
+  states(mdp)[s1i]
 end

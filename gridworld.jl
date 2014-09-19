@@ -1,12 +1,32 @@
-include("mdp.jl")
+include("MDPs.jl")
+
+using MDPs
 
 # Problem based on https://www.cs.ubc.ca/~poole/demos/mdp/vi.html
 
 using TikzPictures
 
-type GridWorld
-  mdp::MDP
+type GridWorld <: MDP
+  S::Vector{Int}
+  A::Vector{Symbol}
+  T::Array{Float64,3}
+  R::Matrix{Float64}
+  discount::Float64
+  actionIndex::Dict{Symbol, Int}
+  nextStates::Dict{(Int, Symbol), Vector{Int}}
 end
+
+MDPs.actions(g::GridWorld) = g.A
+MDPs.states(g::GridWorld) = g.S
+MDPs.numActions(g::GridWorld) = length(g.A)
+MDPs.numStates(g::GridWorld) = length(g.S)
+MDPs.reward(g::GridWorld, s, a) = g.R[s, g.actionIndex[a]]
+MDPs.transition(g::GridWorld, s0, a, s1) = g.T[s0, g.actionIndex[a], s1]
+MDPs.discount(g::GridWorld) = g.discount
+MDPs.nextStates(g::GridWorld, s, a) = g.nextStates[(s, a)]
+MDPs.stateIndex(g::GridWorld, s) = s
+MDPs.actionIndex(g::GridWorld, a) = g.actionIndex[a]
+
 
 s2xy(s) = ind2sub((10, 10), s)
 
@@ -93,7 +113,9 @@ function GridWorld()
   R[10,1] = -0.8
   R[91,2] = -0.8
   R[100,2] = -0.8
-  GridWorld(MDP(S,A,T,R))
+  discount = 0.9
+  nextStates = [(S[si], A[ai])=>find(T[si, ai, :]) for si=1:length(S), ai=1:length(A)]
+  GridWorld(S, A, T, R, discount, [A[i]=>i for i=1:length(A)], nextStates)
 end
 
 function colorval(val, brightness::Real = 1.0)
@@ -110,7 +132,7 @@ function colorval(val, brightness::Real = 1.0)
 end
 
 function plot(g::GridWorld, f::Function)
-  V = map(f, g.mdp.S)
+  V = map(f, g.S)
   plot(g, V)
 end
 
@@ -119,7 +141,7 @@ function plot(obj::GridWorld, V::Vector; curState=0)
   sqsize = 1.0
   twid = 0.05
   (r, g, b) = colorval(V)
-  for s = obj.mdp.S
+  for s = obj.S
     (yval, xval) = s2xy(s)
     yval = 10 - yval
     println(o, "\\definecolor{currentcolor}{RGB}{$(r[s]),$(g[s]),$(b[s])}")
@@ -136,12 +158,12 @@ function plot(obj::GridWorld, V::Vector; curState=0)
 end
 
 function plot(g::GridWorld, f::Function, policy::Function; curState=0)
-  V = map(f, g.mdp.S)
+  V = map(f, g.S)
   plot(g, V, policy, curState=curState)
 end
 
 function plot(obj::GridWorld, V::Vector, policy::Function; curState=0)
-  P = map(policy, obj.mdp.S)
+  P = map(policy, obj.S)
   plot(obj, V, P, curState=curState)
 end
 
@@ -150,7 +172,7 @@ function plot(obj::GridWorld, V::Vector, policy::Vector; curState=0)
   sqsize = 1.0
   twid = 0.05
   (r, g, b) = colorval(V)
-  for s in obj.mdp.S
+  for s in obj.S
     (yval, xval) = s2xy(s)
     yval = 10 - yval
     println(o, "\\definecolor{currentcolor}{RGB}{$(r[s]),$(g[s]),$(b[s])}")
@@ -160,7 +182,7 @@ function plot(obj::GridWorld, V::Vector, policy::Vector; curState=0)
     end
   end
   println(o, "\\begin{scope}[fill=gray]")
-  for s in obj.mdp.S
+  for s in obj.S
     (yval, xval) = s2xy(s)
     yval = 10 - yval + 1
     c = [xval, yval] * sqsize - sqsize / 2
