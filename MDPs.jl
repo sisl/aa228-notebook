@@ -83,4 +83,5 @@ discount(mdp::MappedDiscreteMDP) = mdp.discount
 stateIndex(mdp::MappedDiscreteMDP, s) = mdp.stateIndex[s]
 actionIndex(mdp::MappedDiscreteMDP, a) = mdp.actionIndex[s]
 nextStates(mdp::MappedDiscreteMDP, s, a) = mdp.nextStates[(s, a)]
+
 end
