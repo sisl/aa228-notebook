@@ -113,6 +113,10 @@ function GridWorld()
   R[10,1] = -0.8
   R[91,2] = -0.8
   R[100,2] = -0.8
+  R[1,3] = -0.8
+  R[91,3] = -0.8
+  R[10,4] = -0.8
+  R[100,4] = -0.8
   discount = 0.9
   nextStates = [(S[si], A[ai])=>find(T[si, ai, :]) for si=1:length(S), ai=1:length(A)]
   GridWorld(S, A, T, R, discount, [A[i]=>i for i=1:length(A)], nextStates)
