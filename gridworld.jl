@@ -13,7 +13,7 @@ type GridWorld <: MDP
   R::Matrix{Float64}
   discount::Float64
   actionIndex::Dict{Symbol, Int}
-  nextStates::Dict{(Int, Symbol), Vector{Int}}
+  nextStates::Dict{Tuple{Int, Symbol}, Vector{Int}}
 end
 
 MDPs.actions(g::GridWorld) = g.A
@@ -216,4 +216,3 @@ function plot(obj::GridWorld, V::Vector, policy::Vector; curState=0)
   println(o, "\\draw[black] grid(10,10);");
   TikzPicture(takebuf_string(o), options="scale=1.25")
 end
-
