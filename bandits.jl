@@ -7,26 +7,26 @@ numArms(b::Bandit) = length(b.θ)
 
 function banditTrial(b)
   B = [button("Arm $i") for i = 1:numArms(b)]
-  wins = [foldl((acc, value) -> acc + pull(b,i), 0, signal(B[i])) for i = 1:arms]
-  tries = [foldl((acc, value) -> acc + 1, 0, signal(B[i])) for i = 1:arms]
+  wins = [foldp((acc, value) -> acc + pull(b,i), 0, signal(B[i])) for i = 1:arms]
+  tries = [foldp((acc, value) -> acc + 1, 0, signal(B[i])) for i = 1:arms]
   for i = 1:numArms(b)
     display(B[i])
-    display(lift((w,t) -> latex(@sprintf("%d wins out of %d tries (%d percent)", w, t, 100*w/t)), wins[i], tries[i]))
+    display(map((w,t) -> latex(@sprintf("%d wins out of %d tries (%d percent)", w, t, 100*w/t)), wins[i], tries[i]))
   end
   t = togglebuttons(["Hide", "Show"], value="Hide", label="True parameters")
   display(t)
-  display(lift(v -> v == "Show" ? latex(string(b.θ)) : latex(""), t))
+  display(map(v -> v == "Show" ? latex(string(b.θ)) : latex(""), t))
 end
 
 function banditEstimation(b)
   B = [button("Arm $i") for i = 1:numArms(b)]
-  wins = [foldl((acc, value) -> acc + pull(b,i), 0, signal(B[i])) for i = 1:arms]
-  tries = [foldl((acc, value) -> acc + 1, 0, signal(B[i])) for i = 1:arms]
+  wins = [foldp((acc, value) -> acc + pull(b,i), 0, signal(B[i])) for i = 1:arms]
+  tries = [foldp((acc, value) -> acc + 1, 0, signal(B[i])) for i = 1:arms]
   for i = 1:numArms(b)
     display(B[i])
-    display(lift((w,t) -> latex(@sprintf("%d wins out of %d tries (%d percent)", w, t, 100*w/t)), wins[i], tries[i]))
+    display(map((w,t) -> latex(@sprintf("%d wins out of %d tries (%d percent)", w, t, 100*w/t)), wins[i], tries[i]))
   end
-  display(lift((w1,t1,w2,t2)->
+  display(map((w1,t1,w2,t2)->
        Axis([
               Plots.Linear(θ->pdf(Beta(w1+1, t1-w1+1), θ), (0,1), legendentry="Beta($(w1+1), $(t1-w1+1))"),
               Plots.Linear(θ->pdf(Beta(w2+1, t2-w2+1), θ), (0,1), legendentry="Beta($(w2+1), $(t2-w2+1))")
@@ -36,7 +36,7 @@ function banditEstimation(b)
        ))
   t = togglebuttons(["Hide", "Show"], value="Hide", label="True parameters")
   display(t)
-  display(lift(v -> v == "Show" ? latex(string(b.θ)) : latex(""), t))
+  display(map(v -> v == "Show" ? latex(string(b.θ)) : latex(""), t))
 end
 
 type BanditStatistics
