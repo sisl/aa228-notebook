@@ -15,7 +15,7 @@ function banditTrial(b)
   end
   t = togglebuttons(["Hide", "Show"], value="Hide", label="True parameters")
   display(t)
-  display(map(v -> v == "Show" ? latex(string(b.θ)) : latex(""), t))
+  display(map(v -> v == "Show" ? latex(string(b.θ)) : latex(""), signal(t)))
 end
 
 function banditEstimation(b)
@@ -36,7 +36,7 @@ function banditEstimation(b)
        ))
   t = togglebuttons(["Hide", "Show"], value="Hide", label="True parameters")
   display(t)
-  display(map(v -> v == "Show" ? latex(string(b.θ)) : latex(""), t))
+  display(map(v -> v == "Show" ? latex(string(b.θ)) : latex(""), signal(t)))
 end
 
 type BanditStatistics
