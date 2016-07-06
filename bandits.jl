@@ -7,8 +7,8 @@ numArms(b::Bandit) = length(b.θ)
 
 function banditTrial(b)
   B = [button("Arm $i") for i = 1:numArms(b)]
-  wins = [foldp((acc, value) -> acc + pull(b,i), 0, signal(B[i])) for i = 1:arms]
   tries = [foldp((acc, value) -> acc + 1, 0, signal(B[i])) for i = 1:arms]
+  wins = [foldp((acc, value) -> acc + pull(b,i), 0, signal(B[i])) for i = 1:arms]
   for i = 1:numArms(b)
     display(B[i])
     display(map((w,t) -> latex(@sprintf("%d wins out of %d tries (%d percent)", w, t, 100*w/t)), wins[i], tries[i]))
@@ -20,8 +20,8 @@ end
 
 function banditEstimation(b)
   B = [button("Arm $i") for i = 1:numArms(b)]
-  wins = [foldp((acc, value) -> acc + pull(b,i), 0, signal(B[i])) for i = 1:arms]
   tries = [foldp((acc, value) -> acc + 1, 0, signal(B[i])) for i = 1:arms]
+  wins = [foldp((acc, value) -> acc + pull(b,i), 0, signal(B[i])) for i = 1:arms]
   for i = 1:numArms(b)
     display(B[i])
     display(map((w,t) -> latex(@sprintf("%d wins out of %d tries (%d percent)", w, t, 100*w/t)), wins[i], tries[i]))
