@@ -40,12 +40,13 @@ function banditTrial_old(b)
   display(map(v -> v == "Show" ? latex(string(b.θ)) : latex(""), t))
 end
 
-function banditEstimation(b)     #new version implements the number of wins & tries as one signal, rather than two
+function banditEstimation(b)  # This works, but 'wins' is not correct!
   B = [button("Arm $i") for i = 1:numArms(b)]
-  bandit_states = [foldp((acc, value)->(acc[1]+pull(b,i),acc[2]+1), (0,0), signal(B[i])) for i in 1:arms]
+  tries = [foldp((acc, value) -> acc + 1, 0, signal(B[i])) for i = 1:arms]
+  wins = [foldp((acc, value) -> acc + pull(b,i), 0, signal(B[i])) for i = 1:arms]
   for i = 1:numArms(b)
-      display(B[i])
-      display(map(s -> latex(@sprintf("%d wins out of %d tries (%d percent)", s[1], s[2], 100*s[1]/s[2])), bandit_states[i]))
+    display(B[i])
+    display(map((w,t) -> latex(@sprintf("%d wins out of %d tries (%d percent)", w, t, 100*w/t)), wins[i], tries[i]))
   end
   display(map((w1,t1,w2,t2)->
        Axis([
@@ -57,10 +58,10 @@ function banditEstimation(b)     #new version implements the number of wins & tr
        ))
   t = togglebuttons(["Hide", "Show"], value="Hide", label="True parameters")
   display(t)
-  display(map(v -> v == "Show" ? _get_latex_string_list_of_percentages(b.θ) : latex(""), signal(t)))
+  display(map(v -> v == "Show" ? latex(string(b.θ)) : latex(""), signal(t)))
 end
 
-function banditEstimation_old(b)
+function banditEstimation_old(b)  # This doesn't work: 'tries' never gets updated!
   B = [button("Arm $i") for i = 1:numArms(b)]
   wins = [foldp((acc, value) -> acc + pull(b,i), 0, signal(B[i])) for i = 1:arms]
   tries = [foldp((acc, value) -> acc + 1, 0, signal(B[i])) for i = 1:arms]
