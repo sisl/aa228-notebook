@@ -1,0 +1,11 @@
+language: julia
+dist: trusty
+julia:
+  - 0.4
+  - 0.5
+  - nightly
+notifications:
+  email: false
+script:
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia --check-bounds=yes -e 'Pkg.add("NBInclude"); include("runtests.jl")'
