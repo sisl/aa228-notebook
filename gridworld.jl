@@ -118,8 +118,8 @@ function GridWorld()
   R[10,4] = -0.8
   R[100,4] = -0.8
   discount = 0.9
-  nextStates = [(S[si], A[ai])=>find(T[si, ai, :]) for si=1:length(S), ai=1:length(A)]
-  GridWorld(S, A, T, R, discount, [A[i]=>i for i=1:length(A)], nextStates)
+  nextStates = Dict([(S[si], A[ai])=>find(T[si, ai, :]) for si=1:length(S), ai=1:length(A)])
+  GridWorld(S, A, T, R, discount, Dict([A[i]=>i for i=1:length(A)]), nextStates)
 end
 
 function colorval(val, brightness::Real = 1.0)

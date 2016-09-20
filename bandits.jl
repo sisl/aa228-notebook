@@ -73,7 +73,7 @@ winProbabilities(b::BanditStatistics) = (b.numWins + 1)./(b.numTries + 2)
 abstract BanditPolicy
 
 function simulate(b::Bandit, policy::BanditPolicy; steps = 10)
-    wins = zeros(steps)
+    wins = zeros(Int, steps)
     s = BanditStatistics(numArms(b))
     for step = 1:steps
         i = arm(policy, s)
@@ -85,9 +85,9 @@ function simulate(b::Bandit, policy::BanditPolicy; steps = 10)
 end
 
 function simulateAverage(b::Bandit, policy::BanditPolicy; steps = 10, iterations = 10)
-  ret = zeros(steps)
+  ret = zeros(Int, steps)
   for i = 1:iterations
-    ret += simulate(b, policy, steps=steps, steps=steps)
+    ret += simulate(b, policy, steps=steps)
   end
   ret ./ iterations
 end

@@ -3,7 +3,7 @@ dist: trusty
 julia:
   - 0.4
   - 0.5
-  - nightly
+  # - nightly # nightly is not worth testing for now - it fails immediately on 0.6
 notifications:
   email: false
 script:

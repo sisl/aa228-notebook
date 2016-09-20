@@ -61,9 +61,9 @@ type MappedDiscreteMDP <: MDP
   actionIndex::Dict
   nextStates
   function MappedDiscreteMDP(S, A, T, R; discount=0.9)
-    stateIndex = [S[i]=>i for i = 1:length(S)]
-    actionIndex = [A[i]=>i for i = 1:length(A)]
-    nextStates = [(S[si], A[ai])=>S[find(T[si, ai, :])] for si=1:length(S), ai=1:length(A)]
+    stateIndex = Dict([S[i]=>i for i in 1:length(S)])
+    actionIndex = Dict([A[i]=>i for i in 1:length(A)])
+    nextStates = Dict([(S[si], A[ai])=>S[find(T[si, ai, :])] for si=1:length(S), ai=1:length(A)])
     new(S, A, T, R, discount, stateIndex, actionIndex, nextStates)
   end
 end
