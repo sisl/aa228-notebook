@@ -13,17 +13,17 @@ end
 
 function valueIteration!(V::Vector, Q::Matrix, mdp::MDP, iterations::Integer)
   (S, A, T, R, discount) = locals(mdp)
-  Vold = copy(V)
+  V_old = copy(V)
   for i = 1:iterations
     for s0i in 1:numStates(mdp)
       s0 = S[s0i]
       for ai = 1:numActions(mdp)
         a = A[ai]
-        Q[s0i,ai] = R(s0, a) + discount * @sum (s1 in nextStates(mdp, s0, a)) (T(s0, a, s1)*Vold[stateIndex(mdp, s1)])
+        Q[s0i,ai] = R(s0, a) + discount * sum([0.0; [T(s0, a, s1)*V_old[stateIndex(mdp, s1)] for s1 in nextStates(mdp, s0, a)]])
       end
       V[s0i] = maximum(Q[s0i,:])
     end
-    copy!(Vold, V)
+    copy!(V_old, V)
   end
 end
 
@@ -38,13 +38,13 @@ end
 
 function isTerminal(mdp::MDP, s0, a)
   S1 = nextStates(mdp, s0, a)
-  length(S1) == 0 || 0 == @sum (s1 in S1) transition(mdp, s0, a, s1)
+  length(S1) == 0 || 0 == sum(s1 -> transition(mdp, s0, a, s1), S1)
 end
 
 nextReward(mdp::MDP, s0, a) = reward(mdp, s0, a)
 
 function nextState(mdp::MDP, s0, a)
-  p = @array (s1 in states(mdp)) transition(mdp, s0, a, s1)
+  p = [transition(mdp, s0, a, s1) for s1 in states(mdp)]
   s1i = rand(Categorical(p))
   states(mdp)[s1i]
 end
