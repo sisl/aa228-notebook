@@ -1,4 +1,4 @@
-# PGFPlots
+# AA228 Notebooks
 
 [![Build Status](https://travis-ci.org/sisl/aa228-notebook.svg)](https://travis-ci.org/sisl/aa228-notebook)
 
