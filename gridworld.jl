@@ -1,12 +1,12 @@
-include("MDPs.jl")
+# include("MDPs.jl")
 
-using MDPs
+importall POMDPs
 
 # Problem based on https://www.cs.ubc.ca/~poole/demos/mdp/vi.html
 
 using TikzPictures
 
-type GridWorld <: MDP
+type GridWorld <: MDP{Int, Symbol}
   S::Vector{Int}
   A::Vector{Symbol}
   T::Array{Float64,3}
@@ -16,16 +16,16 @@ type GridWorld <: MDP
   nextStates::Dict{Tuple{Int, Symbol}, Vector{Int}}
 end
 
-MDPs.actions(g::GridWorld) = g.A
-MDPs.states(g::GridWorld) = g.S
-MDPs.numActions(g::GridWorld) = length(g.A)
-MDPs.numStates(g::GridWorld) = length(g.S)
-MDPs.reward(g::GridWorld, s, a) = g.R[s, g.actionIndex[a]]
-MDPs.transition(g::GridWorld, s0, a, s1) = g.T[s0, g.actionIndex[a], s1]
-MDPs.discount(g::GridWorld) = g.discount
-MDPs.nextStates(g::GridWorld, s, a) = g.nextStates[(s, a)]
-MDPs.stateIndex(g::GridWorld, s) = s
-MDPs.actionIndex(g::GridWorld, a) = g.actionIndex[a]
+actions(g::GridWorld) = g.A
+states(g::GridWorld) = g.S
+numActions(g::GridWorld) = length(g.A)
+numStates(g::GridWorld) = length(g.S)
+reward(g::GridWorld, s, a) = g.R[s, g.actionIndex[a]]
+transition(g::GridWorld, s0, a, s1) = g.T[s0, g.actionIndex[a], s1]
+discount(g::GridWorld) = g.discount
+nextStates(g::GridWorld, s, a) = g.nextStates[(s, a)]
+stateIndex(g::GridWorld, s) = s
+actionIndex(g::GridWorld, a) = g.actionIndex[a]
 
 
 s2xy(s) = ind2sub((10, 10), s)
