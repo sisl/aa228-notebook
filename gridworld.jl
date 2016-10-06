@@ -1,12 +1,10 @@
-include("MDPs.jl")
-
-using MDPs
+using POMDPs
 
 # Problem based on https://www.cs.ubc.ca/~poole/demos/mdp/vi.html
 
 using TikzPictures
 
-type GridWorld <: MDP
+type DMUGridWorld <: MDP{Int, Symbol}
   S::Vector{Int}
   A::Vector{Symbol}
   T::Array{Float64,3}
@@ -16,17 +14,25 @@ type GridWorld <: MDP
   nextStates::Dict{Tuple{Int, Symbol}, Vector{Int}}
 end
 
-MDPs.actions(g::GridWorld) = g.A
-MDPs.states(g::GridWorld) = g.S
-MDPs.numActions(g::GridWorld) = length(g.A)
-MDPs.numStates(g::GridWorld) = length(g.S)
-MDPs.reward(g::GridWorld, s, a) = g.R[s, g.actionIndex[a]]
-MDPs.transition(g::GridWorld, s0, a, s1) = g.T[s0, g.actionIndex[a], s1]
-MDPs.discount(g::GridWorld) = g.discount
-MDPs.nextStates(g::GridWorld, s, a) = g.nextStates[(s, a)]
-MDPs.stateIndex(g::GridWorld, s) = s
-MDPs.actionIndex(g::GridWorld, a) = g.actionIndex[a]
+actions(g::DMUGridWorld) = g.A
+states(g::DMUGridWorld) = g.S
+n_actions(g::DMUGridWorld) = length(g.A)
+n_states(g::DMUGridWorld) = length(g.S)
+reward(g::DMUGridWorld, s::Int, a::Symbol) = g.R[s, g.actionIndex[a]]
+transition_pdf(g::DMUGridWorld, s0::Int, a::Symbol, s1::Int) = g.T[s0, g.actionIndex[a], s1]
+discount(g::DMUGridWorld) = g.discount
+next_states(g::DMUGridWorld, s, a) = g.nextStates[(s, a)]
+state_index(g::DMUGridWorld, s) = s
+action_index(g::DMUGridWorld, a) = g.actionIndex[a]
 
+function locals(mdp::MDP)
+  S = states(mdp)
+  A = actions(mdp)
+  T = (s0, a, s1) -> transition_pdf(mdp, s0, a, s1)
+  R = (s, a) -> reward(mdp, s, a)
+  gamma = discount(mdp)
+  (S, A, T, R, gamma)
+end
 
 s2xy(s) = ind2sub((10, 10), s)
 
@@ -38,7 +44,7 @@ function xy2s(x, y)
   sub2ind((10, 10), x, y)
 end
 
-function GridWorld()
+function DMUGridWorld()
   A = [:left, :right, :up, :down]
   S = 1:100
   T = zeros(length(S), length(A), length(S))
@@ -119,7 +125,7 @@ function GridWorld()
   R[100,4] = -0.8
   discount = 0.9
   nextStates = Dict([(S[si], A[ai])=>find(T[si, ai, :]) for si=1:length(S), ai=1:length(A)])
-  GridWorld(S, A, T, R, discount, Dict([A[i]=>i for i=1:length(A)]), nextStates)
+  DMUGridWorld(S, A, T, R, discount, Dict([A[i]=>i for i=1:length(A)]), nextStates)
 end
 
 function colorval(val, brightness::Real = 1.0)
@@ -135,12 +141,12 @@ function colorval(val, brightness::Real = 1.0)
   (r, g, b)
 end
 
-function plot(g::GridWorld, f::Function)
+function plot(g::DMUGridWorld, f::Function)
   V = map(f, g.S)
   plot(g, V)
 end
 
-function plot(obj::GridWorld, V::Vector; curState=0)
+function plot(obj::DMUGridWorld, V::Vector; curState=0)
   o = IOBuffer()
   sqsize = 1.0
   twid = 0.05
@@ -161,17 +167,17 @@ function plot(obj::GridWorld, V::Vector; curState=0)
   TikzPicture(takebuf_string(o), options="scale=1.25")
 end
 
-function plot(g::GridWorld, f::Function, policy::Function; curState=0)
+function plot(g::DMUGridWorld, f::Function, policy::Function; curState=0)
   V = map(f, g.S)
   plot(g, V, policy, curState=curState)
 end
 
-function plot(obj::GridWorld, V::Vector, policy::Function; curState=0)
+function plot(obj::DMUGridWorld, V::Vector, policy::Function; curState=0)
   P = map(policy, obj.S)
   plot(obj, V, P, curState=curState)
 end
 
-function plot(obj::GridWorld, V::Vector, policy::Vector; curState=0)
+function plot(obj::DMUGridWorld, V::Vector, policy::Vector; curState=0)
   o = IOBuffer()
   sqsize = 1.0
   twid = 0.05
