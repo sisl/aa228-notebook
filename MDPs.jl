@@ -51,37 +51,5 @@ numStates(mdp::DiscreteMDP) = mdp.numStates
 stateIndex(mdp::DiscreteMDP, s) = s
 actionIndex(mdp::DiscreteMDP, a) = a
 
-type MappedDiscreteMDP <: MDP
-  S::Vector
-  A::Vector
-  T::Array{Float64,3}
-  R::Matrix{Float64}
-  discount::Float64
-  stateIndex::Dict
-  actionIndex::Dict
-  nextStates
-  function MappedDiscreteMDP(S, A, T, R; discount=0.9)
-    stateIndex = Dict([S[i]=>i for i in 1:length(S)])
-    actionIndex = Dict([A[i]=>i for i in 1:length(A)])
-    nextStates = Dict([(S[si], A[ai])=>S[find(T[si, ai, :])] for si=1:length(S), ai=1:length(A)])
-    new(S, A, T, R, discount, stateIndex, actionIndex, nextStates)
-  end
-end
-
-MappedDiscreteMDP(S, A; discount=0.9) =
-  MappedDiscreteMDP(S,
-                    A,
-                    zeros(length(S), length(A), length(S)),
-                    zeros(length(S), length(A)),
-                    discount=discount)
-
-actions(mdp::MappedDiscreteMDP) = mdp.A
-states(mdp::MappedDiscreteMDP) = mdp.S
-reward(mdp::MappedDiscreteMDP, s, a) = mdp.R[mdp.stateIndex[s], mdp.actionIndex[a]]
-transition(mdp::MappedDiscreteMDP, s0, a, s1) = mdp.T[mdp.stateIndex[s0], mdp.actionIndex[a], mdp.stateIndex[s1]]
-discount(mdp::MappedDiscreteMDP) = mdp.discount
-stateIndex(mdp::MappedDiscreteMDP, s) = mdp.stateIndex[s]
-actionIndex(mdp::MappedDiscreteMDP, a) = mdp.actionIndex[s]
-nextStates(mdp::MappedDiscreteMDP, s, a) = mdp.nextStates[(s, a)]
 
 end

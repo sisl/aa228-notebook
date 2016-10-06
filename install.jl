@@ -9,4 +9,10 @@ Pkg.add("RDatasets")
 Pkg.add("Grid")
 Pkg.add("Reactive")
 
-println("Dependency install complete!")
+Pkg.add("POMDPs")
+
+using POMDPs
+POMDPs.add("GenerativeModels")
+POMDPs.add("POMDPToolbox")
+
+println("Dependency install complete! (check for errors)")
