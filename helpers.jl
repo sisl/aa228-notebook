@@ -53,3 +53,19 @@ function prettyPolynomial(λ)
     @printf(o, "\$")
     takebuf_string(o)
 end
+
+using TikzPictures
+
+function plot_chain(len; fill::Dict{Int,String}=Dict{Int64,String}())
+    str = "\\draw "
+    for i in 1:len
+        fl = get(fill, i, "white")
+        str = string(str, "($(i)cm, 0cm) node[draw=black,circle,fill=$fl]{$i}")
+        if i == len
+            str = string(str, ";")
+        else
+            str = string(str, " -- ")
+        end
+    end
+    return TikzPicture(str)
+end
