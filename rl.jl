@@ -1,6 +1,6 @@
 using Distributions
 using GenerativeModels
-using POMDPToolbox # for WeightVec with rng sampling
+using StatsBase
 include("gridworld.jl")
 include("helpers.jl")
 
@@ -39,7 +39,7 @@ action_index(mdp::MappedDiscreteMDP, a) = mdp.actionIndex[s]
 next_states(mdp::MappedDiscreteMDP, s, a) = mdp.nextStates[(s, a)]
 
 
-rand_state(mdp::MDP) = states(mdp)[rand(DiscreteUniform(1,numStates(mdp)))]
+rand_state(mdp::MDP) = states(mdp)[rand(DiscreteUniform(1,n_states(mdp)))]
 
 function value_iteration(mdp::MDP, iterations::Integer)
   V = zeros(n_states(mdp))
@@ -80,7 +80,7 @@ end
 
 function generate_s(mdp::MDP, s0, a, rng::AbstractRNG=Base.GLOBAL_RNG)
     p = [transition_pdf(mdp, s0, a, s1) for s1 in states(mdp)]
-    s1i = sample(rng, WeightVec(p))
+    s1i = sample(rng, Weights(p))
     states(mdp)[s1i]
 end
 
@@ -147,7 +147,9 @@ end
 
 function action(policy::MLRL, s)
     si = policy.mdp.stateIndex[s]
-    ai = indmax(policy.Q[si, :])
+    Qs = policy.Q[si, :]
+    ais = findin(Qs, maximum(Qs))
+    ai = rand(ais)
     policy.mdp.A[ai]
 end
 
