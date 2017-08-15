@@ -130,7 +130,7 @@ end
 
 function colorval(val, brightness::Real = 1.0)
   val = convert(Vector{Float64}, val)
-  x = 255 - min(255, 255 * (abs(val) ./ 10.0) .^ brightness)
+  x = 255 - min.(255, 255 * (abs.(val) ./ 10.0) .^ brightness)
   r = 255 * ones(size(val))
   g = 255 * ones(size(val))
   b = 255 * ones(size(val))
@@ -220,5 +220,5 @@ function plot(obj::DMUGridWorld, V::Vector, policy::Vector; curState=0)
   end
   println(o, "\\end{scope}");
   println(o, "\\draw[black] grid(10,10);");
-  TikzPicture(takebuf_string(o), options="scale=1.25")
+  TikzPicture(String(take!(o)), options="scale=1.25")
 end
