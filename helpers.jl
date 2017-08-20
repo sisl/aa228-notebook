@@ -51,7 +51,7 @@ function prettyPolynomial(λ)
         end
     end
     @printf(o, "\$")
-    takebuf_string(o)
+    String(take!(o))
 end
 
 using TikzPictures

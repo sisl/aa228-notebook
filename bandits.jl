@@ -70,7 +70,7 @@ end
 # win probability assuming uniform prior
 winProbabilities(b::BanditStatistics) = (b.numWins + 1)./(b.numTries + 2)
 
-abstract BanditPolicy
+abstract type BanditPolicy end
 
 function simulate(b::Bandit, policy::BanditPolicy; steps = 10)
     wins = zeros(Int, steps)
