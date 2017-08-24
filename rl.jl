@@ -1,5 +1,4 @@
 using Distributions
-using GenerativeModels
 using StatsBase
 include("gridworld.jl")
 include("helpers.jl")
@@ -13,16 +12,17 @@ type MappedDiscreteMDP{SType,AType} <: MDP{SType,AType}
     stateIndex::Dict
     actionIndex::Dict
     nextStates
-    function MappedDiscreteMDP{SType,AType}(S::Vector{SType}, A::Vector{AType}, T, R; discount=0.9)
-        stateIndex = Dict([S[i]=>i for i in 1:length(S)])
-        actionIndex = Dict([A[i]=>i for i in 1:length(A)])
-        nextStates = Dict([(S[si], A[ai])=>S[find(T[si, ai, :])] for si=1:length(S), ai=1:length(A)])
-        new(S, A, T, R, discount, stateIndex, actionIndex, nextStates)
-    end
 end
 
-MappedDiscreteMDP{SType,AType}(S::Vector{SType}, A::Vector{AType}; discount=0.9) =
-    MappedDiscreteMDP{SType,AType}(S, A,
+function MappedDiscreteMDP(S::Vector, A::Vector, T, R; discount=0.9)
+    stateIndex = Dict([S[i]=>i for i in 1:length(S)])
+    actionIndex = Dict([A[i]=>i for i in 1:length(A)])
+    nextStates = Dict([(S[si], A[ai])=>S[find(T[si, ai, :])] for si=1:length(S), ai=1:length(A)])
+    MappedDiscreteMDP(S, A, T, R, discount, stateIndex, actionIndex, nextStates)
+end
+
+MappedDiscreteMDP(S::Vector, A::Vector; discount=0.9) =
+    MappedDiscreteMDP(S, A,
                     zeros(length(S), length(A), length(S)),
                     zeros(length(S), length(A)),
                     discount=discount)
@@ -190,4 +190,3 @@ function simulate(mdp::MDP, steps::Integer, policy::Policy; script=[])
     end
     (S, R, V)
 end
-

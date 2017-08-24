@@ -164,7 +164,7 @@ function plot(obj::DMUGridWorld, V::Vector; curState=0)
   end
   println(o, "\\draw[black] grid(10,10);")
   tikzDeleteIntermediate(false)
-  TikzPicture(takebuf_string(o), options="scale=1.25")
+  TikzPicture(String(take!(o)), options="scale=1.25")
 end
 
 function plot(g::DMUGridWorld, f::Function, policy::Function; curState=0)
