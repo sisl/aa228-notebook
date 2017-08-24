@@ -6,7 +6,6 @@ Pkg.add("PGFPlots")
 Pkg.add("Interact")
 # Pkg.checkout("Interact") # get the latest version
 Pkg.add("RDatasets")
-Pkg.add("Grid")
 Pkg.add("Reactive")
 
 Pkg.add("POMDPs")
