@@ -11,7 +11,6 @@ Pkg.add("Reactive")
 Pkg.add("POMDPs")
 
 using POMDPs
-POMDPs.add("GenerativeModels")
 POMDPs.add("POMDPToolbox")
 
 println("Dependency install complete! (check for errors)")
