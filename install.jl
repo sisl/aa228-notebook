@@ -23,6 +23,8 @@ end
 
 using POMDPs
 POMDPs.add("BasicPOMCP")
+POMDPs.add("MCTS")
+POMDPs.add("DiscreteValueIteration")
 
 try
     Pkg.clone("https://github.com/zsunberg/LaserTag.jl")
