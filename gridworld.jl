@@ -35,14 +35,14 @@ function locals(mdp::MDP)
   (S, A, T, R, gamma)
 end
 
-s2xy(s) = ind2sub((10, 10), s)
+s2xy(s) = Tuple(CartesianIndices((10,10))[s])
 
 function xy2s(x, y)
   x = max(x, 1)
   y = max(y, 1)
   x = min(x, 10)
   y = min(y, 10)
-  sub2ind((10, 10), x, y)
+  LinearIndices((10, 10))[x,y]
 end
 
 function DMUGridWorld()
@@ -53,41 +53,41 @@ function DMUGridWorld()
   for s in S
     (x, y) = s2xy(s)
     if x == 3 && y == 8
-      R[s, :] = 3
+      R[s, :] .= 3
     elseif x == 8 && y == 9
-      R[s, :] = 10
+      R[s, :] .= 10
     else
       if x == 8 && y == 4
-        R[s, :] = -10
+        R[s, :] .= -10
       elseif x == 5 && y == 4
-        R[s, :] = -5
+        R[s, :] .= -5
       elseif x == 1
         if y == 1 || y == 10
-          R[s, :] = -0.2
+          R[s, :] .= -0.2
         else
-          R[s, :] = -0.1
+          R[s, :] .= -0.1
         end
 
         R[s, 3] = -0.7
       elseif x == 10
         if y == 1 || y == 10
-          R[s, :] = -0.2
+          R[s, :] .= -0.2
         else
-          R[s, :] = -0.1
+          R[s, :] .= -0.1
         end
         R[s, 4] = -0.7
       elseif y == 1
         if x == 1 || x == 10
-          R[s, :] = -0.2
+          R[s, :] .= -0.2
         else
-          R[s, :] = -0.1
+          R[s, :] .= -0.1
         end
         R[s, 1] = -0.7
       elseif y == 10
         if x == 1 || x == 10
-          R[s, :] = -0.2
+          R[s, :] .= -0.2
         else
-          R[s, :] = -0.1
+          R[s, :] .= -0.1
         end
         R[s, 2] = -0.7
       end
@@ -125,20 +125,20 @@ function DMUGridWorld()
   R[10,4] = -0.8
   R[100,4] = -0.8
   discount = 0.9
-  nextStates = Dict([(S[si], A[ai])=>find(T[si, ai, :]) for si=1:length(S), ai=1:length(A)])
+  nextStates = Dict([(S[si], A[ai])=>findall(x->x!=0, T[si, ai, :]) for si=1:length(S), ai=1:length(A)])
   DMUGridWorld(S, A, T, R, discount, Dict([A[i]=>i for i=1:length(A)]), nextStates)
 end
 
 function colorval(val, brightness::Real = 1.0)
   val = convert(Vector{Float64}, val)
-  x = 255 - min.(255, 255 * (abs.(val) ./ 10.0) .^ brightness)
+  x = 255 .- min.(255, 255 * (abs.(val) ./ 10.0) .^ brightness)
   r = 255 * ones(size(val))
   g = 255 * ones(size(val))
   b = 255 * ones(size(val))
-  r[val .>= 0] = x[val .>= 0]
-  b[val .>= 0] = x[val .>= 0]
-  g[val .< 0] = x[val .< 0]
-  b[val .< 0] = x[val .< 0]
+  r[val .>= 0] .= x[val .>= 0]
+  b[val .>= 0] .= x[val .>= 0]
+  g[val .< 0] .= x[val .< 0]
+  b[val .< 0] .= x[val .< 0]
   (r, g, b)
 end
 
@@ -196,7 +196,7 @@ function plot(obj::DMUGridWorld, V::Vector, policy::Vector; curState=0)
   for s in obj.S
     (yval, xval) = s2xy(s)
     yval = 10 - yval + 1
-    c = [xval, yval] * sqsize - sqsize / 2
+    c = [xval, yval] * sqsize .- sqsize / 2
     C = [c'; c'; c']'
     RightArrow = [0 0 sqsize/2; twid -twid 0]
     if policy[s] == :left
