@@ -1,12 +1,13 @@
-type Bandit
+using Printf
+mutable struct Bandit
   θ::Vector{Float64} # true bandit probabilities
 end
 Bandit(k::Integer) = Bandit(rand(k))
 pull(b::Bandit, i::Integer) = rand() < b.θ[i]
 numArms(b::Bandit) = length(b.θ)
 
-function _get_string_list_of_percentages{R<:Real}(bandit_odds::Vector{R})
-    strings = map(θ->@sprintf("%.2f percent", 100θ), bandit_odds)
+function _get_string_list_of_percentages(bandit_odds::Vector{R}) where {R<:Real}
+    strings = map(θ->Printf.@sprintf("%.2f percent", 100θ), bandit_odds)
     retval = strings[1]
     for i in 2 : length(strings)
         retval = retval * ", " * strings[i]
@@ -20,14 +21,14 @@ function banditTrial(b)
     for i in 1 : numArms(b)
         but = button("Arm $i")
         display(but)
-        sig = foldp((acc, value)->(acc[1]+pull(b,i),acc[2]+1), (0,0), signal(but))
-        display(map(s -> @sprintf("%d wins out of %d tries (%d percent)", s[1], s[2], 100*s[1]/s[2]), sig))
+        sig = foldp((acc, value)->(acc[1]+pull(b,i),acc[2]+1), (0,0), Signal(but))
+        display(map(s -> Printf.@sprintf("%d wins out of %d tries (%d percent)", s[1], s[2], 100*s[1]/s[2]), sig))
         # NOTE: we used to use the latex() wrapper
     end
 
     t = togglebuttons(["Hide", "Show"], value="Hide", label="True Params")
     display(t)
-    display(map(v -> v == "Show" ? _get_string_list_of_percentages(b.θ) : "", signal(t)))
+    display(map(v -> v == "Show" ? _get_string_list_of_percentages(b.θ) : "", Signal(t)))
 end
 
 function banditEstimation(b)
@@ -35,9 +36,9 @@ function banditEstimation(b)
   for (i,but) in enumerate(B)
       display(but)
   end
-  sigs = [foldp((acc, value)->(acc[1]+pull(b,i),acc[2]+1), (0,0), signal(B[i])) for i in 1:numArms(b)]
+  sigs = [foldp((acc, value)->(acc[1]+pull(b,i),acc[2]+1), (0,0), Signal(B[i])) for i in 1:numArms(b)]
   for (i,sig) in enumerate(sigs)
-      display(map(s -> @sprintf("%d wins out of %d tries (%d percent)", s[1], s[2], 100*s[1]/s[2]), sig))
+      display(map(s -> Printf.@sprintf("%d wins out of %d tries (%d percent)", s[1], s[2], 100*s[1]/s[2]), sig))
   end
 
   display(map((sig1,sig2)-> begin
@@ -52,10 +53,10 @@ function banditEstimation(b)
          ))
   t = togglebuttons(["Hide", "Show"], value="Hide", label="True Params")
   display(t)
-  display(map(v -> v == "Show" ? string(b.θ) : "", signal(t)))
+  display(map(v -> v == "Show" ? string(b.θ) : "", Signal(t)))
 end
 
-type BanditStatistics
+mutable struct BanditStatistics
     numWins::Vector{Int}
     numTries::Vector{Int}
     BanditStatistics(k::Int) = new(zeros(k), zeros(k))
@@ -68,7 +69,7 @@ function update!(b::BanditStatistics, i::Int, success::Bool)
     end
 end
 # win probability assuming uniform prior
-winProbabilities(b::BanditStatistics) = (b.numWins + 1)./(b.numTries + 2)
+winProbabilities(b::BanditStatistics) = (b.numWins .+ 1)./(b.numTries .+ 2)
 
 abstract type BanditPolicy end
 
