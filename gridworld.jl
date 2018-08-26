@@ -3,8 +3,9 @@ using POMDPs
 # Problem based on https://www.cs.ubc.ca/~poole/demos/mdp/vi.html
 
 using TikzPictures
+using Printf
 
-type DMUGridWorld <: MDP{Int, Symbol}
+mutable struct DMUGridWorld <: MDP{Int, Symbol}
   S::Vector{Int}
   A::Vector{Symbol}
   T::Array{Float64,3}
@@ -159,7 +160,7 @@ function plot(obj::DMUGridWorld, V::Vector; curState=0)
     if s == curState
       println(o, "\\fill[orange] ($((xval-1) * sqsize),$((yval) * sqsize)) rectangle +($sqsize,$sqsize);")
     end
-    vs = @sprintf("%0.2f", V[s])
+    vs = Printf.@sprintf("%0.2f", V[s])
     println(o, "\\node[above right] at ($((xval-1) * sqsize), $((yval) * sqsize)) {\$$(vs)\$};")
   end
   println(o, "\\draw[black] grid(10,10);")
@@ -215,7 +216,7 @@ function plot(obj::DMUGridWorld, V::Vector, policy::Vector; curState=0)
       println(o, "\\fill ($(A[1]), $(A[2])) -- ($(A[3]), $(A[4])) -- ($(A[5]), $(A[6])) -- cycle;")
     end
 
-    vs = @sprintf("%0.2f", V[s])
+    vs = Printf.@sprintf("%0.2f", V[s])
     println(o, "\\node[above right] at ($((xval-1) * sqsize), $((yval-1) * sqsize)) {\$$(vs)\$};")
   end
   println(o, "\\end{scope}");
