@@ -1,3 +1,5 @@
+using Printf
+using LinearAlgebra
 macro max(range, ex)
     :(maximum($(Expr(:typed_comprehension, :Float64, ex, range))))
 end
@@ -26,31 +28,31 @@ end
 
 function polyfit(x, y, n)
     A = [float(xi)^p for xi in x, p = 0:n]
-    (q, r) = qr(A)
-    r \ (q' * y)
+    (q, r) = LinearAlgebra.qr(A)
+    r \ (q[:,1:n+1]' * y)
 end
 
 function prettyPolynomial(λ)
     o = IOBuffer()
-    @printf(o, "\$")
+    Printf.@printf(o, "\$")
     for i = 1:length(λ)
         if i == 1
-            @printf(o, "%0.2f", λ[i])
+            Printf.@printf(o, "%0.2f", λ[i])
         elseif i == 2
             if λ[i] < 0
-                @printf(o, "%0.2f x", λ[i])
+                Printf.@printf(o, "%0.2f x", λ[i])
             else
-                @printf(o, "+%0.2f x", λ[i])
+                Printf.@printf(o, "+%0.2f x", λ[i])
             end
         else
             if λ[i] < 0
-                @printf(o, "%0.2fx^{%d}", λ[i], i-1)
+                Printf.@printf(o, "%0.2fx^{%d}", λ[i], i-1)
             else
-                @printf(o, "+%0.2fx^{%d}", λ[i], i-1)
+                Printf.@printf(o, "+%0.2fx^{%d}", λ[i], i-1)
             end
         end
     end
-    @printf(o, "\$")
+    Printf.@printf(o, "\$")
     String(take!(o))
 end
 
