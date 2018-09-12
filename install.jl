@@ -7,9 +7,13 @@ Pkg.add("Interact")
 # Pkg.checkout("Interact") # get the latest version
 Pkg.add("RDatasets")
 Pkg.add("Reactive")
+Pkg.add("Plots")
+Pkg.add("PyCall")
+Pkg.add("PyPlot")
 
 Pkg.add("POMDPs")
-Pkg.add("POMDPToolbox")
+Pkg.add("POMDPModelTools")
+Pkg.add("POMDPSimulators")
 Pkg.add("POMDPModels") # for Crying Baby
 
 try

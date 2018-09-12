@@ -1,4 +1,5 @@
 using Printf
+using Random
 mutable struct Bandit
   θ::Vector{Float64} # true bandit probabilities
 end
