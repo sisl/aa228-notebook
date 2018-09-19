@@ -1,19 +1,18 @@
 Pkg.add("NBInclude")
 Pkg.add("BayesNets")
-# Pkg.checkout("BayesNets") # get the latest version
 Pkg.add("PGFPlots")
-# Pkg.checkout("PGFPlots") # get the latest version
 Pkg.add("Interact")
-# Pkg.checkout("Interact") # get the latest version
 Pkg.add("RDatasets")
 Pkg.add("Reactive")
 Pkg.add("Plots")
 Pkg.add("PyCall")
 Pkg.add("PyPlot")
 
+# POMDP packages
 Pkg.add("POMDPs")
 Pkg.add("POMDPModelTools")
 Pkg.add("POMDPSimulators")
+Pkg.add("POMDPPolicies")
 Pkg.add("POMDPModels") # for Crying Baby
 
 try
@@ -30,6 +29,8 @@ POMDPs.add("BasicPOMCP")
 POMDPs.add("MCTS")
 POMDPs.add("DiscreteValueIteration")
 
+
+# Needed for notebook 16
 try
     Pkg.clone("https://github.com/zsunberg/LaserTag.jl")
 catch ex
