@@ -1,39 +1,24 @@
-Pkg.add("NBInclude")
-Pkg.add("BayesNets")
-# Pkg.checkout("BayesNets") # get the latest version
-Pkg.add("PGFPlots")
-# Pkg.checkout("PGFPlots") # get the latest version
-Pkg.add("Interact")
-# Pkg.checkout("Interact") # get the latest version
-Pkg.add("RDatasets")
-Pkg.add("Reactive")
+import Pkg
 
+@info("Adding JuliaPOMDP Package Registry to your global list of registries.")
 Pkg.add("POMDPs")
-Pkg.add("POMDPToolbox")
-Pkg.add("POMDPModels") # for Crying Baby
-
-try
-    Pkg.clone("https://github.com/zsunberg/ContinuumWorld.jl.git")
-catch ex
-    warn("The following error was encountered when cloning ContinuumWorld:")
-    showerror(STDERR, ex)
-    println()
-    warn("This error was ignored")
-end
-
 using POMDPs
-POMDPs.add("BasicPOMCP")
-POMDPs.add("MCTS")
-POMDPs.add("DiscreteValueIteration")
+POMDPs.add_registry()
 
-try
-    Pkg.clone("https://github.com/zsunberg/LaserTag.jl")
-catch ex
-    warn("The following error was encountered when cloning LaserTag:")
-    showerror(STDERR, ex)
-    println()
-    warn("This error was ignored")
+ENV["PYTHON"]=""
+
+projdir = dirname(@__FILE__())
+toml = open(joinpath(projdir, "Project.toml")) do f
+    Pkg.TOML.parse(f)
 end
+pkgs = collect(keys(toml["deps"]))
+pkgstring = string(pkg*"\n" for pkg in pkgs)
+@info("""
+    Installing the following packages to the current environment:
 
+    $pkgstring
+""")
 
-println("Dependency install complete! (check for errors)")
+Pkg.add(pkgs)
+
+@info("Dependency install complete! (check for errors)")
