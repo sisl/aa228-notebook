@@ -12,7 +12,7 @@ toml = open(joinpath(projdir, "Project.toml")) do f
     Pkg.TOML.parse(f)
 end
 pkgs = collect(keys(toml["deps"]))
-pkgstring = string(pkg*"\n" for pkg in pkgs)
+pkgstring = string([pkg*"\n    " for pkg in pkgs]...)
 @info("""
     Installing the following packages to the current environment:
 
