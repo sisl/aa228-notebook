@@ -223,3 +223,35 @@ function plot(obj::DMUGridWorld, V::Vector, policy::Vector; curState=0)
   println(o, "\\draw[black] grid(10,10);");
   TikzPicture(String(take!(o)), options="scale=1.25")
 end
+
+# simulates taking action a from s
+function simulate(g::DMUGridWorld, s::Int, a::Symbol)
+    probs = Float64[]
+    if length(next_states(g,s,a)) == 0
+        println("s = ", s)
+        println("a = ", a)
+    end
+    for sp in next_states(g, s, a)
+        push!(probs, transition_pdf(g, s, a, sp) )
+    end
+
+    # make sure these sum to 1. They should, but let's be safe.
+    probs = probs / sum(probs)
+
+    # sample a random value from next states
+    rand_val = rand()
+    sampled_idx = 1
+    prob_sum = 0.0
+    i = 1
+    while true
+        prob_sum += probs[i]
+        if rand_val < prob_sum
+            sampled_idx = i
+            break
+        end
+        i += 1
+    end
+    sp = next_states(g,s,a)[sampled_idx]
+
+    return sp, reward(g,s,a)
+end
