@@ -13,48 +13,46 @@ function _get_string_list_of_percentages(bandit_odds::Vector{R}) where {R<:Real}
     for i in 2 : length(strings)
         retval = retval * ", " * strings[i]
     end
-    # latex(retval)
     retval
 end
 
 function banditTrial(b)
 
     for i in 1 : numArms(b)
-        but = button("Arm $i")
+        but=button("Arm $i",value=0)
         display(but)
-        sig = foldp((acc, value)->(acc[1]+pull(b,i),acc[2]+1), (0,0), Signal(but))
-        display(map(s -> Printf.@sprintf("%d wins out of %d tries (%d percent)", s[1], s[2], 100*s[1]/s[2]), sig))
+        wins=Observable(0)
+        Interact.@on &but>0 ? (wins[] = wins[]+pull(b,i)) : 0
+        display(map(s -> Printf.@sprintf("%d wins out of %d tries (%d percent)", wins[], but[], 100*wins[]/but[]), but))
         # NOTE: we used to use the latex() wrapper
     end
 
     t = togglebuttons(["Hide", "Show"], value="Hide", label="True Params")
     display(t)
-    display(map(v -> v == "Show" ? _get_string_list_of_percentages(b.θ) : "", Signal(t)))
+    display(map(v -> v == "Show" ? _get_string_list_of_percentages(b.θ) : "", t))
 end
 
 function banditEstimation(b)
-  B = [button("Arm $i") for i = 1:numArms(b)]
-  for (i,but) in enumerate(B)
-      display(but)
-  end
-  sigs = [foldp((acc, value)->(acc[1]+pull(b,i),acc[2]+1), (0,0), Signal(B[i])) for i in 1:numArms(b)]
-  for (i,sig) in enumerate(sigs)
-      display(map(s -> Printf.@sprintf("%d wins out of %d tries (%d percent)", s[1], s[2], 100*s[1]/s[2]), sig))
-  end
-
-  display(map((sig1,sig2)-> begin
-      w1, t1 = sig1[1], sig1[2]
-      w2, t2 = sig2[1], sig2[2]
-         Axis([
-                Plots.Linear(θ->pdf(Beta(w1+1, t1-w1+1), θ), (0,1), legendentry="Beta($(w1+1), $(t1-w1+1))"),
-                Plots.Linear(θ->pdf(Beta(w2+1, t2-w2+1), θ), (0,1), legendentry="Beta($(w2+1), $(t2-w2+1))")
-                ],
-      xmin=0,xmax=1,ymin=0, width="15cm", height="10cm")
-      end, sigs[1], sigs[2],
-         ))
-  t = togglebuttons(["Hide", "Show"], value="Hide", label="True Params")
-  display(t)
-  display(map(v -> v == "Show" ? string(b.θ) : "", Signal(t)))
+    B = [button("Arm $i") for i = 1:numArms(b)]
+    for i in 1 : numArms(b)
+        but=button("Arm $i",value=0)
+        display(but)
+        wins=Observable(0)
+        Interact.@on &but>0 ? (wins[] = wins[]+pull(b,i)) : 0
+        display(map(s -> Printf.@sprintf("%d wins out of %d tries (%d percent)", wins[], but[], 100*wins[]/but[]), but))
+        display(map(s -> begin
+             w = wins[]
+             t = but[]
+             Axis([
+                    Plots.Linear(θ->pdf(Beta(w+1, t-w+1), θ), (0,1), legendentry="Beta($(w+1), $(t-w+1))")
+                    ],
+             xmin=0,xmax=1,ymin=0, width="15cm", height="10cm")
+                    end, but
+             ))
+    end
+    t = togglebuttons(["Hide", "Show"], value="Hide", label="True Params")
+    display(t)
+    display(map(v -> v == "Show" ? string(b.θ) : "", t))
 end
 
 mutable struct BanditStatistics
