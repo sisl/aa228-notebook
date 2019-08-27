@@ -1,8 +1,9 @@
 language: julia
 dist: trusty
 julia:
-  - 0.7
   - 1.0
+  - 1.1
+  - 1.2
 notifications:
   email: false
 script:
