@@ -1,6 +1,7 @@
 [deps]
 BasicPOMCP = "d721219e-3fc6-5570-a8ef-e5402f47c49e"
 BayesNets = "ba4760a4-c768-5bed-964b-cf806dc591cb"
+BeliefUpdaters = "8bb6e9a1-7d73-552c-a44a-e5dc5634aac4"
 ContinuumWorld = "5cbb95a3-277b-5373-895a-7e14bd91b3cc"
 D3Trees = "e3df1716-f71e-5df9-9e2d-98e193103c45"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
