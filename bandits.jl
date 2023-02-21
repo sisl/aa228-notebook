@@ -1,5 +1,7 @@
 using Printf
 using Random
+using PGFPlots
+
 mutable struct Bandit
   θ::Vector{Float64} # true bandit probabilities
 end
@@ -72,14 +74,17 @@ winProbabilities(b::BanditStatistics) = (b.numWins .+ 1)./(b.numTries .+ 2)
 
 abstract type BanditPolicy end
 
+reset!(p::BanditPolicy) = nothing
+
 function simulate(b::Bandit, policy::BanditPolicy; steps = 10)
     wins = zeros(Int, steps)
     s = BanditStatistics(numArms(b))
+    reset!(policy)
     for step = 1:steps
         i = arm(policy, s)
         win = pull(b, i)
         update!(s, i, win)
-        wins[step] = wins[max(1, step-1)] + (win ? 1 : 0)
+        wins[step] = win 
     end
     wins
 end
@@ -87,7 +92,16 @@ end
 function simulateAverage(b::Bandit, policy::BanditPolicy; steps = 10, iterations = 10)
   ret = zeros(Int, steps)
   for i = 1:iterations
-    ret += simulate(b, policy, steps=steps)
+    ret .+= simulate(b, policy, steps=steps)
   end
   ret ./ iterations
+end
+
+function learningCurves(b::Bandit, policies; steps=10, iterations=10)
+    lines = Plots.Linear[]
+    for (name, policy) in policies
+        results = simulateAverage(b, policy; steps=steps, iterations=iterations)
+        push!(lines, Plots.Linear(results, legendentry=name, style="very thick", mark="none"))
+    end
+    return lines
 end
